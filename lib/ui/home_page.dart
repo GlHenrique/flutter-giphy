@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_giphy/ui/gif_page.dart';
 import 'package:http/http.dart' as http;
 
 class Home extends StatefulWidget {
@@ -63,6 +64,13 @@ class _HomeState extends State<Home> {
                   fit: BoxFit.cover,
                 ),
               ),
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            Gif(snapshot.data['data'][index])));
+              },
             );
           }
           return Container(
