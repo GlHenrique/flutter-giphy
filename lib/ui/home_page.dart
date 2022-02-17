@@ -49,8 +49,8 @@ class _HomeState extends State<Home> {
       ),
       backgroundColor: Colors.black,
       body: Column(
-        children: const [
-          Padding(
+        children: [
+          const Padding(
             padding: EdgeInsets.all(8.0),
             child: TextField(
               decoration: InputDecoration(
@@ -66,9 +66,35 @@ class _HomeState extends State<Home> {
               ),
               textAlign: TextAlign.center,
             ),
-          )
+          ),
+          Expanded(
+              child: FutureBuilder(
+            future: _getGifs(),
+            builder: (context, snapshot) {
+              switch (snapshot.connectionState) {
+                case ConnectionState.waiting:
+                case ConnectionState.none:
+                  return Container(
+                    width: 200,
+                    height: 200,
+                    alignment: Alignment.center,
+                    child: const CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation(Colors.white),
+                      strokeWidth: 5,
+                    ),
+                  );
+                default:
+                  if (snapshot.hasError) return Container();
+                  return _createGifTable(context, snapshot);
+              }
+            },
+          ))
         ],
       ),
     );
   }
+}
+
+Widget _createGifTable(BuildContext context, AsyncSnapshot snapshot) {
+  return Container();
 }
