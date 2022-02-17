@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_giphy/ui/gif_page.dart';
 import 'package:http/http.dart' as http;
+import 'package:share_plus/share_plus.dart';
+import 'package:transparent_image/transparent_image.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -24,7 +26,7 @@ class _HomeState extends State<Home> {
         '$baseUrl/search?api_key=$apiKey&q=$search&limit=19&offset=$offset&rating=g&lang=pt');
     http.Response response;
 
-    if (search == null) {
+    if (search == null || search!.isEmpty) {
       response = await http.get(urlTrending);
       return json.decode(response.body);
     }
@@ -34,7 +36,7 @@ class _HomeState extends State<Home> {
   }
 
   int getCount(List data) {
-    if (search == null) return data.length;
+    if (search == null || search!.isEmpty) return data.length;
     return data.length + 1;
   }
 
@@ -58,46 +60,51 @@ class _HomeState extends State<Home> {
             return GestureDetector(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  snapshot.data['data'][index]['images']['fixed_height']['url'],
+                child: FadeInImage.memoryNetwork(
+                  placeholder: kTransparentImage,
+                  image: snapshot.data['data'][index]['images']['fixed_height']
+                      ['url'],
                   height: 300,
                   fit: BoxFit.cover,
                 ),
               ),
               onTap: () {
                 Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            Gif(snapshot.data['data'][index])));
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Gif(snapshot.data['data'][index]),
+                  ),
+                );
+              },
+              onLongPress: () {
+                Share.share(snapshot.data['data'][index]['images']
+                    ['fixed_height']['url']);
               },
             );
           }
-          return Container(
-            child: GestureDetector(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(
-                    Icons.add,
+          return GestureDetector(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(
+                  Icons.add,
+                  color: Colors.white,
+                  size: 70,
+                ),
+                Text(
+                  'Carregar mais',
+                  style: TextStyle(
                     color: Colors.white,
-                    size: 70,
+                    fontSize: 22,
                   ),
-                  Text(
-                    'Carregar mais',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                    ),
-                  ),
-                ],
-              ),
-              onTap: () {
-                setState(() {
-                  offset += 19;
-                });
-              },
+                ),
+              ],
             ),
+            onTap: () {
+              setState(() {
+                offset += 19;
+              });
+            },
           );
         });
   }
