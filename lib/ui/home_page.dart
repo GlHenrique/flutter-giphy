@@ -20,7 +20,7 @@ class _HomeState extends State<Home> {
     Uri urlTrending =
         Uri.parse('$baseUrl/trending?api_key=$apiKey&limit=20&rating=g');
     Uri urlSearch = Uri.parse(
-        '$baseUrl/search?api_key=$apiKey&q=$search&limit=20&offset=$offset&rating=g&lang=pt');
+        '$baseUrl/search?api_key=$apiKey&q=$search&limit=19&offset=$offset&rating=g&lang=pt');
     http.Response response;
 
     if (search == null) {
@@ -32,10 +32,66 @@ class _HomeState extends State<Home> {
     return json.decode(response.body);
   }
 
+  int getCount(List data) {
+    if (search == null) return data.length;
+    return data.length + 1;
+  }
+
   @override
   void initState() {
     super.initState();
-    _getGifs().then((value) => print(value));
+    _getGifs();
+  }
+
+  Widget _createGifTable(BuildContext context, AsyncSnapshot snapshot) {
+    return GridView.builder(
+        padding: const EdgeInsets.all(8),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+        ),
+        itemCount: getCount(snapshot.data['data']),
+        itemBuilder: (context, index) {
+          if (search == null || index < snapshot.data['data'].length) {
+            return GestureDetector(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  snapshot.data['data'][index]['images']['fixed_height']['url'],
+                  height: 300,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            );
+          }
+          return Container(
+            child: GestureDetector(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(
+                    Icons.add,
+                    color: Colors.white,
+                    size: 70,
+                  ),
+                  Text(
+                    'Carregar mais',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                    ),
+                  ),
+                ],
+              ),
+              onTap: () {
+                setState(() {
+                  offset += 19;
+                });
+              },
+            ),
+          );
+        });
   }
 
   @override
@@ -50,17 +106,24 @@ class _HomeState extends State<Home> {
       backgroundColor: Colors.black,
       body: Column(
         children: [
-          const Padding(
-            padding: EdgeInsets.all(8.0),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
             child: TextField(
-              decoration: InputDecoration(
+              textInputAction: TextInputAction.search,
+              onSubmitted: (value) {
+                setState(() {
+                  search = value;
+                  offset = 0;
+                });
+              },
+              decoration: const InputDecoration(
                 labelText: 'Pesquise...',
                 labelStyle: TextStyle(
                   color: Colors.white,
                 ),
                 border: OutlineInputBorder(),
               ),
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,
               ),
@@ -93,27 +156,4 @@ class _HomeState extends State<Home> {
       ),
     );
   }
-}
-
-Widget _createGifTable(BuildContext context, AsyncSnapshot snapshot) {
-  return GridView.builder(
-      padding: const EdgeInsets.all(8),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-      ),
-      itemCount: snapshot.data['data'].length,
-      itemBuilder: (context, index) {
-        return GestureDetector(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              snapshot.data['data'][index]['images']['fixed_height']['url'],
-              height: 300,
-              fit: BoxFit.cover,
-            ),
-          ),
-        );
-      });
 }
